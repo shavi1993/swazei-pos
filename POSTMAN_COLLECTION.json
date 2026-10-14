@@ -1,0 +1,11 @@
+{
+  "info": {"name":"Swazei POS API","schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+  "variable": [{"key":"baseUrl","value":"http://localhost:3000/api"},{"key":"token","value":"PASTE_ACCESS_TOKEN"},{"key":"storeId","value":"PASTE_STORE_ID"},{"key":"productId","value":"PASTE_PRODUCT_ID"}],
+  "item": [
+    {"name":"Login","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":"{{baseUrl}}/auth/login","body":{"mode":"raw","raw":"{"email":"owner@example.com","password":"DemoPass123!"}","options":{"raw":{"language":"json"}}}}},
+    {"name":"List stores","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":"{{baseUrl}}/stores"}},
+    {"name":"List products","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":"{{baseUrl}}/products"}},
+    {"name":"List inventory","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":"{{baseUrl}}/stores/{{storeId}}/inventory"}},
+    {"name":"Create sale","request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Idempotency-Key","value":"demo-sale-0001"}],"url":"{{baseUrl}}/stores/{{storeId}}/sales","body":{"mode":"raw","raw":"{"items":[{"productId":"{{productId}}","quantity":2}]}","options":{"raw":{"language":"json"}}}}}
+  ]
+}

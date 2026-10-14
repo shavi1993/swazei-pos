@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  CASHIER
+}
+enum SaleStatus {
+  COMPLETED
+  FAILED
+}
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+model Merchant {
+  id        String   @id @default(cuid())
+  name      String
+  users     User[]
+  stores    Store[]
+  products  Product[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(CASHIER)
+  merchantId   String
+  merchant     Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
+
+model Store {
+  id         String      @id @default(cuid())
+  name       String
+  merchantId String
+  merchant   Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  inventory  Inventory[]
+  sales      Sale[]
+  createdAt  DateTime    @default(now())
+  @@index([merchantId])
+}
+
+model Product {
+  id         String      @id @default(cuid())
+  name       String
+  sku        String
+  priceCents Int
+  active     Boolean     @default(true)
+  merchantId String
+  merchant   Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  inventory  Inventory[]
+  saleItems  SaleItem[]
+  createdAt  DateTime    @default(now())
+  @@unique([merchantId, sku])
+  @@index([merchantId, active])
+}
+
+model Inventory {
+  id        String   @id @default(cuid())
+  storeId   String
+  productId String
+  quantity  Int      @default(0)
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([storeId, productId])
+  @@index([storeId])
+}
+
+model Sale {
+  id                String        @id @default(cuid())
+  storeId           String
+  idempotencyKey    String
+  requestHash       String
+  totalCents        Int
+  status            SaleStatus
+  store             Store         @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  items             SaleItem[]
+  payment           Payment?
+  createdAt         DateTime      @default(now())
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, createdAt])
+}
+
+model SaleItem {
+  id            String  @id @default(cuid())
+  saleId        String
+  productId     String
+  quantity      Int
+  unitPriceCents Int
+  sale          Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  saleId      String        @unique
+  amountCents Int
+  status      PaymentStatus
+  reference   String
+  sale        Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+}
